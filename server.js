@@ -21,6 +21,15 @@ db.serialize(() => {
         if (err) console.error('Erro ao criar tabela Produtos:', err.message);
     });
 
+    // Adiciona a coluna "categoria" na tabela Produtos, caso ainda não exista
+    // (usada para separar lanches de bebidas no cardápio)
+    db.run(`ALTER TABLE Produtos ADD COLUMN categoria TEXT DEFAULT 'lanche'`, (err) => {
+        // Ignora o erro "duplicate column name", que acontece se a coluna já existir
+        if (err && !err.message.includes('duplicate column name')) {
+            console.error('Erro ao adicionar coluna categoria:', err.message);
+        }
+    });
+
     db.run(`CREATE TABLE IF NOT EXISTS Pedidos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome_cliente TEXT,
@@ -30,37 +39,93 @@ db.serialize(() => {
         if (err) console.error('Erro ao criar tabela Pedidos:', err.message);
     });
 
-    // Inserindo dados falsos caso a tabela esteja vazia
+    // Nova tabela: Adicionais (bacon, cheddar, calabresa, etc.)
+    db.run(`CREATE TABLE IF NOT EXISTS Adicionais (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        preco REAL
+    )`, (err) => {
+        if (err) console.error('Erro ao criar tabela Adicionais:', err.message);
+    });
+
+    // Inserindo dados falsos caso a tabela de produtos esteja vazia
     db.get("SELECT COUNT(*) as count FROM Produtos", (err, row) => {
         if (err) {
             console.error('Erro ao contar produtos:', err.message);
             return;
         }
         if (row.count === 0) {
-            db.run(`INSERT INTO Produtos (nome, descricao, preco, imagem_url) VALUES 
-            ('Simprão', 'Pão, hambúrguer, cheddar, cream cheese', 22.00, '🍔'),
-            ('Salada', 'Pão, hambúrguer, cebola roxa, tomate, picles, alface, cheddar, cream cheese', 28.00, '🥗'),
-            ('Duplo', 'Pão, 2 hambúrgueres, duplo cheddar, cream cheese', 37.00, '🍔'),
-            ('Colosso', 'Pão, hambúrguer, bacon, calabresa, cebola roxa, tomate, alface, cheddar, cream cheese', 42.00, '🍔'),
-            ('K2', 'Pão, 2 hambúrgueres, dobro de bacon, dobro de calabresa, dobro de cheddar, cream cheese', 49.00, '🔥'),
-            ('Da Hora', 'Pão, 2 vinas, batata palha, cebola, tomate, cheddar, cream cheese', 18.00, '🌭'),
-            ('Oh My Dog', 'Pão, 2 vinas, batata palha, cebola, tomate, bacon, calabresa, cheddar, cream cheese', 23.00, '🌭'),
-            ('Pão com Carne', 'Pão, hambúrguer artesanal 130g, batata palha, cebola, tomate, cheddar, cream cheese', 25.00, '🍔'),
-            ('Fritas Individual', 'Porção individual 200g', 20.00, '🍟'),
-            ('Fritas com Bacon', 'Porção com bacon 200g', 25.00, '🍟')`,
+            db.run(`INSERT INTO Produtos (nome, descricao, preco, imagem_url, categoria) VALUES 
+            ('Simprão', 'Pão, hambúrguer, cheddar, cream cheese', 22.00, '🍔', 'lanche'),
+            ('Salada', 'Pão, hambúrguer, cebola roxa, tomate, picles, alface, cheddar, cream cheese', 28.00, '🥗', 'lanche'),
+            ('Duplo', 'Pão, 2 hambúrgueres, duplo cheddar, cream cheese', 37.00, '🍔', 'lanche'),
+            ('Colosso', 'Pão, hambúrguer, bacon, calabresa, cebola roxa, tomate, alface, cheddar, cream cheese', 42.00, '🍔', 'lanche'),
+            ('K2', 'Pão, 2 hambúrgueres, dobro de bacon, dobro de calabresa, dobro de cheddar, cream cheese', 49.00, '🔥', 'lanche'),
+            ('Da Hora', 'Pão, 2 vinas, batata palha, cebola, tomate, cheddar, cream cheese', 18.00, '🌭', 'lanche'),
+            ('Oh My Dog', 'Pão, 2 vinas, batata palha, cebola, tomate, bacon, calabresa, cheddar, cream cheese', 23.00, '🌭', 'lanche'),
+            ('Pão com Carne', 'Pão, hambúrguer artesanal 130g, batata palha, cebola, tomate, cheddar, cream cheese', 25.00, '🍔', 'lanche'),
+            ('Fritas Individual', 'Porção individual 200g', 20.00, '🍟', 'lanche'),
+            ('Fritas com Bacon', 'Porção com bacon 200g', 25.00, '🍟', 'lanche')`,
             (err) => {
                 if (err) console.error('Erro ao inserir produtos iniciais:', err.message);
             });
         }
     });
+
+    // Inserindo os adicionais padrão, caso a tabela esteja vazia
+    db.get("SELECT COUNT(*) as count FROM Adicionais", (err, row) => {
+        if (err) {
+            console.error('Erro ao contar adicionais:', err.message);
+            return;
+        }
+        if (row.count === 0) {
+            db.run(`INSERT INTO Adicionais (nome, preco) VALUES
+            ('Bacon', 10.00),
+            ('Hambúrguer', 10.00),
+            ('Calabresa', 8.00),
+            ('Cheddar', 5.00),
+            ('Picles', 3.00),
+            ('Vina', 3.00),
+            ('Salada', 3.00)`,
+            (err) => {
+                if (err) console.error('Erro ao inserir adicionais iniciais:', err.message);
+            });
+        }
+    });
 });
 
-// Rota da API para buscar o cardápio
+// Rota da API para buscar o cardápio (lanches e bebidas)
 app.get('/api/produtos', (req, res) => {
     db.all("SELECT * FROM Produtos", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
+});
+
+// Rota da API para buscar a lista de adicionais
+app.get('/api/adicionais', (req, res) => {
+    db.all("SELECT * FROM Adicionais", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Rota para cadastrar um novo adicional
+app.post('/api/adicionais', (req, res) => {
+    const { nome, preco } = req.body;
+
+    if (!nome || preco === undefined || preco === null) {
+        return res.status(400).json({ error: 'Campos "nome" e "preco" são obrigatórios.' });
+    }
+
+    db.run(
+        `INSERT INTO Adicionais (nome, preco) VALUES (?, ?)`,
+        [nome, Number(preco)],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ mensagem: 'Adicional cadastrado com sucesso!', id: this.lastID });
+        }
+    );
 });
 
 // Rota para receber um novo pedido
@@ -114,11 +179,11 @@ app.patch('/api/pedidos/:id/status', (req, res) => {
 
 // Rota para cadastrar um novo produto no cardápio
 app.post('/api/produtos', (req, res) => {
-    const { nome, descricao, preco, imagem_url } = req.body;
+    const { nome, descricao, preco, imagem_url, categoria } = req.body;
 
     db.run(
-        `INSERT INTO Produtos (nome, descricao, preco, imagem_url) VALUES (?, ?, ?, ?)`,
-        [nome, descricao, preco, imagem_url || '🍔'],
+        `INSERT INTO Produtos (nome, descricao, preco, imagem_url, categoria) VALUES (?, ?, ?, ?, ?)`,
+        [nome, descricao, preco, imagem_url || '🍔', categoria || 'lanche'],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ mensagem: 'Produto cadastrado com sucesso!', id: this.lastID });

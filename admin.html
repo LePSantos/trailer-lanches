@@ -10,13 +10,14 @@
 
     <header class="mb-8 text-center mt-4">
         <h1 class="text-3xl font-extrabold text-purple-400">Painel do Admin</h1>
-        <p class="text-slate-400 text-sm mt-1">Cadastre novos lanches no cardápio</p>
+        <p class="text-slate-400 text-sm mt-1">Cadastre novos lanches e adicionais</p>
     </header>
 
-    <!-- Formulário de Cadastro -->
+    <!-- Formulário de Cadastro de Produto -->
     <div class="bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 space-y-4">
+        <h2 class="text-lg font-bold text-purple-300">Novo Lanche / Bebida</h2>
         <div>
-            <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Lanche</label>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Nome</label>
             <input type="text" id="nome" placeholder="Ex: X-Bacon Supremo" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
         </div>
 
@@ -30,8 +31,34 @@
             <input type="number" step="0.01" id="preco" placeholder="25.50" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
         </div>
 
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Categoria</label>
+            <select id="categoria" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
+                <option value="lanche">Lanche</option>
+                <option value="bebida">Bebida</option>
+            </select>
+        </div>
+
         <button onclick="cadastrarProduto()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-purple-600/30 mt-2">
-            Salvar Lanche no Cardápio
+            Salvar no Cardápio
+        </button>
+    </div>
+
+    <!-- Formulário de Cadastro de Adicional -->
+    <div class="bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 space-y-4 mt-6">
+        <h2 class="text-lg font-bold text-purple-300">Novo Adicional</h2>
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Adicional</label>
+            <input type="text" id="nomeAdicional" placeholder="Ex: Ovo" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Preço (R$)</label>
+            <input type="number" step="0.01" id="precoAdicional" placeholder="5.00" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <button onclick="cadastrarAdicional()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-purple-600/30 mt-2">
+            Salvar Adicional
         </button>
     </div>
 
@@ -40,6 +67,7 @@
             const nome = document.getElementById('nome').value;
             const descricao = document.getElementById('descricao').value;
             const preco = parseFloat(document.getElementById('preco').value);
+            const categoria = document.getElementById('categoria').value;
 
             if (!nome || !preco) {
                 alert("Preencha pelo menos o nome e o preço!");
@@ -49,16 +77,40 @@
             const resposta = await fetch('http://localhost:3000/api/produtos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, descricao, preco, imagem_url: '🍔' })
+                body: JSON.stringify({ nome, descricao, preco, imagem_url: '🍔', categoria })
             });
 
             if (resposta.ok) {
-                alert("Lanche cadastrado com sucesso!");
+                alert("Item cadastrado com sucesso!");
                 document.getElementById('nome').value = '';
                 document.getElementById('descricao').value = '';
                 document.getElementById('preco').value = '';
             } else {
                 alert("Erro ao cadastrar produto.");
+            }
+        }
+
+        async function cadastrarAdicional() {
+            const nome = document.getElementById('nomeAdicional').value;
+            const preco = parseFloat(document.getElementById('precoAdicional').value);
+
+            if (!nome || !preco) {
+                alert("Preencha o nome e o preço do adicional!");
+                return;
+            }
+
+            const resposta = await fetch('http://localhost:3000/api/adicionais', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, preco })
+            });
+
+            if (resposta.ok) {
+                alert("Adicional cadastrado com sucesso!");
+                document.getElementById('nomeAdicional').value = '';
+                document.getElementById('precoAdicional').value = '';
+            } else {
+                alert("Erro ao cadastrar adicional.");
             }
         }
     </script>
