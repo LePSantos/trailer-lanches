@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trailer da Mãe - Cardápio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans p-4 max-w-md mx-auto pb-32">
+
+    <header class="text-center mb-8 mt-4">
+        <h1 class="text-3xl font-extrabold text-orange-600">Trailer de Lanches</h1>
+        <p class="text-slate-400 text-sm mt-1">Faça seu pedido abaixo</p>
+    </header>
+
+    <main id="cardapio-container" class="space-y-4"></main>
+
+    <!-- Área do Carrinho de Compras fixada no fundo da tela -->
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 shadow-xl flex justify-between items-center">
+        <div>
+            <p class="text-xs text-slate-400">Total do pedido:</p>
+            <p class="text-xl font-extrabold text-slate-900" id="total-carrinho">R$ 0,00</p>
+        </div>
+        <div class="flex gap-2">
+            <!-- Botão para limpar/zerar o pedido -->
+            <button onclick="limparCarrinho()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 px-4 rounded-2xl transition-all text-sm">
+                Limpar
+            </button>
+            <!-- Botão para finalizar -->
+            <button onclick="enviarPedido()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-5 rounded-2xl shadow-lg shadow-purple-600/30 transition-all text-sm">
+                Finalizar Pedido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let total = 0;
+
+        async function carregarCardapio() {
+            try {
+                const resposta = await fetch('http://localhost:3000/api/produtos');
+                const produtos = await resposta.json();
+                
+                const container = document.getElementById('cardapio-container');
+                container.innerHTML = ''; 
+
+                produtos.forEach(produto => {
+                    const card = `
+                        <div class="bg-white p-5 rounded-3xl shadow-xl shadow-slate-100 border border-slate-100 flex items-center justify-between transition-all duration-300 hover:shadow-2xl hover:border-purple-100">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-800">${produto.nome}</h2>
+                                <p class="text-sm text-slate-400 mt-0.5">${produto.descricao}</p>
+                                <p class="text-purple-600 font-extrabold mt-2 text-base">R$ ${produto.preco.toFixed(2).replace('.', ',')}</p>
+                            </div>
+                            <button onclick="adicionarItem(${produto.preco})" class="bg-purple-50 text-purple-600 font-bold px-5 py-2.5 rounded-2xl hover:bg-purple-600 hover:text-white transition-all shadow-sm">
+                                + Adicionar
+                            </button>
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+            } catch (erro) {
+                console.error("Erro ao buscar cardápio:", erro);
+            }
+        }
+
+        function adicionarItem(precoItem) {
+            total += precoItem;
+            document.getElementById('total-carrinho').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        // Função para zerar o carrinho
+        function limparCarrinho() {
+            if (total === 0) return;
+            total = 0;
+            document.getElementById('total-carrinho').innerText = "R$ 0,00";
+        }
+
+        async function enviarPedido() {
+            if (total === 0) {
+                alert("Adicione algum lanche antes de finalizar!");
+                return;
+            }
+
+            const nomeCliente = prompt("Qual o seu nome?");
+            if (!nomeCliente) return;
+
+            const resposta = await fetch('http://localhost:3000/api/pedidos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cliente: nomeCliente,
+                    total: total
+                })
+            });
+
+            if (resposta.ok) {
+                alert(`Pedido enviado com sucesso, ${nomeCliente}! A cozinha já está preparando.`);
+                limparCarrinho();
+            } else {
+                alert("Erro ao enviar o pedido.");
+            }
+        }
+
+        carregarCardapio();
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Trailer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans p-6 max-w-lg mx-auto">
+
+    <header class="mb-8 text-center mt-4">
+        <h1 class="text-3xl font-extrabold text-purple-400">Painel do Admin</h1>
+        <p class="text-slate-400 text-sm mt-1">Cadastre novos lanches no cardápio</p>
+    </header>
+
+    <!-- Formulário de Cadastro -->
+    <div class="bg-slate-800 p-6 rounded-3xl shadow-2xl border border-slate-700 space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Nome do Lanche</label>
+            <input type="text" id="nome" placeholder="Ex: X-Bacon Supremo" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Descrição</label>
+            <input type="text" id="descricao" placeholder="Ex: Pão, carne, queijo e bacon crocante" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1">Preço (R$)</label>
+            <input type="number" step="0.01" id="preco" placeholder="25.50" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-purple-500">
+        </div>
+
+        <button onclick="cadastrarProduto()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-purple-600/30 mt-2">
+            Salvar Lanche no Cardápio
+        </button>
+    </div>
+
+    <script>
+        async function cadastrarProduto() {
+            const nome = document.getElementById('nome').value;
+            const descricao = document.getElementById('descricao').value;
+            const preco = parseFloat(document.getElementById('preco').value);
+
+            if (!nome || !preco) {
+                alert("Preencha pelo menos o nome e o preço!");
+                return;
+            }
+
+            const resposta = await fetch('http://localhost:3000/api/produtos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, descricao, preco, imagem_url: '🍔' })
+            });
+
+            if (resposta.ok) {
+                alert("Lanche cadastrado com sucesso!");
+                document.getElementById('nome').value = '';
+                document.getElementById('descricao').value = '';
+                document.getElementById('preco').value = '';
+            } else {
+                alert("Erro ao cadastrar produto.");
+            }
+        }
+    </script>
+</body>
+</html>

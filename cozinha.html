@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel da Cozinha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans p-6">
+
+    <header class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Painel de Pedidos</h1>
+            <p class="text-gray-500">Acompanhamento em tempo real</p>
+        </div>
+        <button onclick="carregarPedidos()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow">
+            Atualizar Agora
+        </button>
+    </header>
+
+    <main id="pedidos-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></main>
+
+    <script>
+        async function carregarPedidos() {
+            try {
+                const resposta = await fetch('http://localhost:3000/api/pedidos');
+                const pedidos = await resposta.json();
+                
+                const container = document.getElementById('pedidos-container');
+                container.innerHTML = ''; 
+
+                if(pedidos.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">Nenhum pedido no momento.</p>';
+                    return;
+                }
+
+                pedidos.forEach(pedido => {
+                    // Define a cor da borda e da etiqueta baseado no status
+                    const corBorda = pedido.status === 'pendente' ? 'border-orange-500' : 'border-green-500';
+                    const corEtiqueta = pedido.status === 'pendente' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800';
+                    
+                    // Cria o botão de ação apenas se estiver pendente
+                    let botaoAcao = '';
+                    if (pedido.status === 'pendente') {
+                        botaoAcao = `<button onclick="mudarStatus(${pedido.id}, 'pronto')" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-xl shadow-sm transition-all">Marcar como Pronto ✓</button>`;
+                    } else {
+                        botaoAcao = `<p class="mt-4 text-center text-green-600 font-bold bg-green-50 py-2 rounded-xl">Pedido Finalizado</p>`;
+                    }
+
+                    const card = `
+                        <div class="bg-white p-5 rounded-2xl shadow-md border-l-4 ${corBorda} flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h2 class="text-xl font-bold text-gray-800">Pedido #${pedido.id}</h2>
+                                    <span class="${corEtiqueta} text-xs font-semibold px-2.5 py-0.5 rounded uppercase">
+                                        ${pedido.status}
+                                    </span>
+                                </div>
+                                <p class="text-gray-600 font-medium">Cliente: <span class="text-gray-900">${pedido.nome_cliente}</span></p>
+                                <p class="text-gray-900 font-bold mt-2 text-lg">R$ ${pedido.total.toFixed(2).replace('.', ',')}</p>
+                            </div>
+                            ${botaoAcao}
+                        </div>
+                    `;
+                    container.innerHTML += card;
+                });
+            } catch (erro) {
+                console.error("Erro ao buscar pedidos:", erro);
+            }
+        }
+
+        // Função que manda a requisição PATCH para atualizar o banco de dados
+        async function mudarStatus(idPedido, novoStatus) {
+            try {
+                const resposta = await fetch(`http://localhost:3000/api/pedidos/${idPedido}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: novoStatus })
+                });
+
+                if (resposta.ok) {
+                    // Recarrega a tela imediatamente para mostrar a mudança
+                    carregarPedidos();
+                } else {
+                    alert("Erro ao atualizar o status.");
+                }
+            } catch (erro) {
+                console.error("Erro na requisição:", erro);
+            }
+        }
+
+        carregarPedidos();
+        setInterval(carregarPedidos, 10000);
+    </script>
+</body>
+</html>
