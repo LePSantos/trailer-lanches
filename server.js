@@ -1,10 +1,16 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors()); // Permite que o HTML acesse a API
 app.use(express.json());
+
+// Serve os arquivos HTML (index, admin, cozinha) direto pelo servidor.
+// Isso permite acessar tudo por http://SEU-IP:3000/ em vez de abrir o arquivo do disco,
+// o que é essencial para o QR Code funcionar no celular do cliente.
+app.use(express.static(path.join(__dirname)));
 
 // Inicia o banco de dados SQLite
 const db = new sqlite3.Database('./lanches.sqlite');
@@ -215,7 +221,7 @@ app.post('/api/produtos', (req, res) => {
     );
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });

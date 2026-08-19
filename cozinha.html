@@ -23,7 +23,7 @@
     <script>
         async function carregarPedidos() {
             try {
-                const resposta = await fetch('http://localhost:3000/api/pedidos');
+                const resposta = await fetch('/api/pedidos');
                 const pedidos = await resposta.json();
                 
                 const container = document.getElementById('pedidos-container');
@@ -72,7 +72,7 @@
         // Função que manda a requisição PATCH para atualizar o banco de dados
         async function mudarStatus(idPedido, novoStatus) {
             try {
-                const resposta = await fetch(`http://localhost:3000/api/pedidos/${idPedido}/status`, {
+                const resposta = await fetch(`/api/pedidos/${idPedido}/status`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: novoStatus })

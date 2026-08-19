@@ -74,7 +74,7 @@
                 return;
             }
 
-            const resposta = await fetch('http://localhost:3000/api/produtos', {
+            const resposta = await fetch('/api/produtos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nome, descricao, preco, imagem_url: '🍔', categoria })
@@ -99,7 +99,7 @@
                 return;
             }
 
-            const resposta = await fetch('http://localhost:3000/api/adicionais', {
+            const resposta = await fetch('/api/adicionais', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ nome, preco })

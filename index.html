@@ -40,7 +40,7 @@
         // Busca os adicionais e o cardápio, depois monta a tela
         async function iniciar() {
             try {
-                const respostaAdicionais = await fetch('http://localhost:3000/api/adicionais');
+                const respostaAdicionais = await fetch('/api/adicionais');
                 adicionaisDisponiveis = await respostaAdicionais.json();
             } catch (erro) {
                 console.error("Erro ao buscar adicionais:", erro);
@@ -51,7 +51,7 @@
 
         async function carregarCardapio() {
             try {
-                const resposta = await fetch('http://localhost:3000/api/produtos');
+                const resposta = await fetch('/api/produtos');
                 const produtos = await resposta.json();
 
                 const container = document.getElementById('cardapio-container');
@@ -169,7 +169,7 @@
             const nomeCliente = prompt("Qual o seu nome?");
             if (!nomeCliente) return;
 
-            const resposta = await fetch('http://localhost:3000/api/pedidos', {
+            const resposta = await fetch('/api/pedidos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
