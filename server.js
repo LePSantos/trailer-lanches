@@ -72,6 +72,30 @@ db.serialize(() => {
         }
     });
 
+    // Inserindo as bebidas, caso ainda não existam produtos com categoria 'bebida'
+    // (roda separado da checagem acima, então funciona mesmo em bancos que já têm lanches)
+    db.get("SELECT COUNT(*) as count FROM Produtos WHERE categoria = 'bebida'", (err, row) => {
+        if (err) {
+            console.error('Erro ao contar bebidas:', err.message);
+            return;
+        }
+        if (row.count === 0) {
+            db.run(`INSERT INTO Produtos (nome, descricao, preco, imagem_url, categoria) VALUES 
+            ('Coca-Cola', 'Lata Tradicional 350ml', 3.50, '🥤', 'bebida'),
+            ('Coca-Cola Zero', 'Lata 350ml', 3.50, '🥤', 'bebida'),
+            ('Coca-Cola', 'Garrafa 1 Litro', 6.50, '🥤', 'bebida'),
+            ('Coca-Cola Zero', 'Garrafa 1 Litro', 6.50, '🥤', 'bebida'),
+            ('Guaraná Antarctica', 'Lata Tradicional 350ml', 3.50, '🥤', 'bebida'),
+            ('Fanta Laranja', 'Lata Tradicional 350ml', 3.50, '🥤', 'bebida'),
+            ('Fanta Uva', 'Lata Tradicional 350ml', 3.50, '🥤', 'bebida'),
+            ('Sprite', 'Lata Tradicional 350ml', 3.50, '🥤', 'bebida'),
+            ('Sprite', 'Garrafa 2 Litros', 7.49, '🥤', 'bebida')`,
+            (err) => {
+                if (err) console.error('Erro ao inserir bebidas iniciais:', err.message);
+            });
+        }
+    });
+
     // Inserindo os adicionais padrão, caso a tabela esteja vazia
     db.get("SELECT COUNT(*) as count FROM Adicionais", (err, row) => {
         if (err) {
